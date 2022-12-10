@@ -1,26 +1,33 @@
 open Base
 open Util
 
-module type Line = sig
+module type Align = sig
   type t 
 
+  (* where the symbol to be aligned is positioned in this Align *)
   val position : t -> int
 
+  (* how many whitespace characters there are in this line before `position` *)
   val leading_whitespace : t -> int
 
+  (* how many whitespace characters there are in this line after `position` *)
   val trailing_whitespace : t -> int
 
   val from_string : string -> t option
 
   val to_string  : t -> string
 
+  (** the main operation of Align
+      places `before` whitespaces before `position`
+      and `after` whitespaces after `position`
+   *)
   val pad : t -> before:int -> after:int -> t
 end
 
-let make_line sym offset = (module struct 
+let make_align sym offset = (module struct 
   type t = { before    : char array
            ; after     : char array
-           ; symbol    : char
+           ; symbol    : char array
            ; sym_index : int
            ; left_pad  : int
            ; right_pad : int
@@ -49,10 +56,16 @@ let make_line sym offset = (module struct
   let from_string s = 
     let open Option             in 
     let arr = String.to_array s in
-    Util.index_of arr ~offset ~pred:sym
-    >>| fun i -> { before    = Array.sub arr ~pos:0 ~len:i 
-                 ; after     = Array.sub arr ~pos:(i + 1) ~len:((Array.length arr) - (i + 1))
-                 ; symbol    = Array.get arr i
+    Util.index_of_pattern arr ~offset ~pattern:sym
+    >>| fun i -> { before    = Array.sub arr 
+                                        ~pos:0       
+                                        ~len:i 
+                 ; after     = Array.sub arr 
+                                        ~pos:(i + Array.length sym) 
+                                        ~len:(Array.length arr - i - Array.length sym)
+                 ; symbol    = Array.sub arr 
+                                        ~pos:i       
+                                        ~len:(Array.length sym)
                  ; sym_index = i
                  ; left_pad  = 0
                  ; right_pad = 0
@@ -77,7 +90,7 @@ let make_line sym offset = (module struct
     in
     String.of_char_list 
     @@ Array.to_list 
-    @@ Array.concat [conformed_b; [|symbol|]; conformed_a]
+    @@ Array.concat [conformed_b; symbol; conformed_a]
     
    
   (* pads are the difference between where a symbol is and where it should go *)
@@ -86,4 +99,4 @@ let make_line sym offset = (module struct
     { t with left_pad  = left_pad  + before
     ;        right_pad = right_pad + after
     }
-end : Line)
+end : Align)
