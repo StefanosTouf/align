@@ -39,11 +39,7 @@ let pipeline str chars =
     )
   in 
   List.bind (Transformation.parse_list str) 
-    ~f:(fun {symbols; word; before; after; times; _} -> match symbols, word with
-       | Some s, None -> make_step [|Util.make_pred s|] times before after
-       | None, Some w -> make_step (String.to_array w |> Array.map ~f:equal_char) times before after
-       | _            -> failwith "AAAA"
-       ) 
+    ~f:(fun {matcher; before; after; times; _} -> make_step matcher times before after) 
   |> List.fold ~init:chars ~f:(fun acc step -> step acc)
 
 let () = pipeline (Sys.get_argv()).(1) (read_lines ()) 

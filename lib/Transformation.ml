@@ -1,7 +1,6 @@
 open Base
 
-type t = { symbols : char list option [@sexp.option]
-         ; word    : string option    [@sexp.option]
+type t = { matcher : Match.t
          ; before  : int
          ; after   : int
          ; times   : int
