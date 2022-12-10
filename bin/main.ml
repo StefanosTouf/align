@@ -1,45 +1,33 @@
 open Base
-open Util
 open Line
+(* open Util *)
 
 let read_lines () =
   let stdin    = Stdio.In_channel.stdin      in 
-  let read  () = Stdio.In_channel.input_lines stdin |> List.map ~f:(String.to_list)
+  let read  () = Stdio.In_channel.input_lines stdin
   and close () = Stdio.In_channel.close stdin in
   Exn.protect ~f:read ~finally:close
 
 module Formatter(M : Line) = struct
-  let leading_whites line = 
-    let (bef, _, _) = M.split_around line
-    in
-    List.rev bef |> List.take_while ~f:is_white |> List.length
-
   let cmp t t' = 
-    compare (M.position t - leading_whites t) (M.position t' - leading_whites t')
+    compare (M.position t - M.leading_whitespace t) (M.position t' - M.leading_whitespace t')
 
-  let align_with_leader l leader =
-    let position   = M.position l 
-    and (b, s, a)  = M.split_around l
-    and leader_pos = M.position leader
-    in
-    let difference = leader_pos - position
-    in
-    if difference < 0 then
-      List.concat [List.take b ((List.length b) + difference); [s]; a]
-    else 
-      List.concat [b; list_of_whites difference; [s]; a]
+  let align_with_leader l leader=
+    let difference = (M.position leader) - (M.position l)
+    in M.pad l 
+      ~before:(difference - M.leading_whitespace leader) 
+      ~after:(neg @@ M.trailing_whitespace l)
 
   let align lines ~before ~after =
     let ts = 
-      List.map lines
-        ~f:(fun t -> M.from_list t |> Option.map ~f:(M.pad ~before ~after)) 
+      List.map lines ~f:M.from_string
     in
     let leader = 
       List.filter_opt ts
       |> List.max_elt ~compare:cmp
     in 
     let whites i line = match line, leader with
-    | Some l, Some lead -> align_with_leader l lead
+    | Some l, Some lead -> align_with_leader l lead |> M.pad ~before ~after |> M.to_string
     |  _                -> List.nth_exn lines i
     in
       List.mapi ~f:whites ts
@@ -60,5 +48,5 @@ let pipeline str chars =
   (Transformation.parse_list str) 
 
 let () = match (Sys.get_argv()).(1) with
- | s -> pipeline s (read_lines ()) |> List.map ~f:String.of_char_list |> String.concat ~sep:"\n" |> Stdio.print_endline
+ | s -> pipeline s (read_lines ()) |> String.concat ~sep:"\n" |> Stdio.print_endline
 
