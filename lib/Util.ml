@@ -10,15 +10,6 @@ let is_white c = equal_char c ' '
 let array_of_whites length =
   Array.init ~f:(Fn.const ' ') length
 
-let index_of arr ~offset ~pred =
-  let rec loop ofs = function 
-    | idx when idx >= Array.length arr                     -> None
-    | idx when pred (Array.get arr idx) && equal_int ofs 0 -> Some idx
-    | idx when pred (Array.get arr idx)                    -> loop (ofs - 1) (idx + 1)
-    | idx                                                  -> loop ofs (idx + 1)
-  in
-    loop offset 0
-
 let index_of_pattern arr ~offset ~pattern =
   let rec loop match_idx ofs idx = 
     if      idx >= Array.length arr && equal_int match_idx (Array.length pattern)
