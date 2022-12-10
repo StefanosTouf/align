@@ -17,8 +17,7 @@ module type Line = sig
   val pad : t -> before:int -> after:int -> t
 end
 
-
-module Make_Line(M : sig val sym : char -> bool end) : Line = struct
+let make_line sym offset = (module struct 
   type t = { before    : char array
            ; after     : char array
            ; symbol    : char
@@ -47,18 +46,17 @@ module Make_Line(M : sig val sym : char -> bool end) : Line = struct
     in
     count 0 0
 
-
   let from_string s = 
     let open Option             in 
     let arr = String.to_array s in
-    Array.findi ~f:(fun _ -> M.sym) arr
-    >>| fun (i, _) -> { before    = Array.sub arr ~pos:0 ~len:i 
-                      ; after     = Array.sub arr ~pos:(i + 1) ~len:((Array.length arr) - (i + 1))
-                      ; symbol    = Array.get arr i
-                      ; sym_index = i
-                      ; left_pad  = 0
-                      ; right_pad = 0
-                      }
+    Util.index_of arr ~offset ~pred:sym
+    >>| fun i -> { before    = Array.sub arr ~pos:0 ~len:i 
+                 ; after     = Array.sub arr ~pos:(i + 1) ~len:((Array.length arr) - (i + 1))
+                 ; symbol    = Array.get arr i
+                 ; sym_index = i
+                 ; left_pad  = 0
+                 ; right_pad = 0
+                 }
 
   let conform_before before difference =
     if (difference > 0) then
@@ -88,5 +86,4 @@ module Make_Line(M : sig val sym : char -> bool end) : Line = struct
     { t with left_pad  = left_pad  + before
     ;        right_pad = right_pad + after
     }
-end
-
+end : Line)

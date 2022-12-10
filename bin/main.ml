@@ -12,7 +12,7 @@ module Formatter(M : Line) = struct
   let cmp t t' = 
     compare (M.position t - M.leading_whitespace t) (M.position t' - M.leading_whitespace t')
 
-  let align_with_leader l leader=
+  let align_with_leader l leader =
     let difference = (M.position leader) - (M.position l)
     in M.pad l 
       ~before:(difference - M.leading_whitespace leader) 
@@ -33,20 +33,29 @@ module Formatter(M : Line) = struct
       List.mapi ~f:whites ts
 end
 
-let run syms lines = 
- let module M = Make_Line(struct let sym = syms end) in
- let module F = Formatter(M) in
+let run syms lines ~offset = 
+ let line     = make_line syms offset in
+ let module M = (val line)            in
+ let module F = Formatter(M)          in
  F.align lines
 
 let make_pred syms = 
   fun s -> List.exists ~f:(equal_char s) syms
 
 let pipeline str chars = 
-  List.fold 
-  ~init:chars 
-  ~f:(fun acc {symbols; before; after} -> run (make_pred symbols) acc ~before ~after) 
-  (Transformation.parse_list str) 
+  let make_step pred times before after = 
+   Sequence.to_list @@ Sequence.unfold ~init:times ~f:(function
+      | 0 -> None
+      | n -> let make chars = run pred chars ~offset:(times - n) ~before ~after
+             in  Some (make, n - 1)
+    )
+  in 
+  List.bind (Transformation.parse_list str) 
+  ~f:(fun {symbols; before; after; times; _} -> make_step (make_pred symbols) times before after) 
+  |> List.fold ~init:chars 
+  ~f:(fun acc step -> step acc)
 
-let () = match (Sys.get_argv()).(1) with
- | s -> pipeline s (read_lines ()) |> String.concat ~sep:"\n" |> Stdio.print_endline
+let () = pipeline (Sys.get_argv()).(1) (read_lines ()) 
+         |> String.concat ~sep:"\n" 
+         |> Stdio.print_endline
 
