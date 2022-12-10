@@ -19,8 +19,7 @@ module type Align = sig
 
   (** the main operation of Align
       places `before` whitespaces before `position`
-      and `after` whitespaces after `position`
-   *)
+      and `after` whitespaces after `position` *)
   val pad : t -> before:int -> after:int -> t
 end
 
