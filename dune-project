@@ -19,7 +19,7 @@
  (name format)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune base core ppx_inline_test ppx_jane)
+ (depends ocaml dune base core ppx_inline_test ppx_jane stdio parsexp ppx_deriving)
  (tags
   (topics "to describe" your project)))
 
