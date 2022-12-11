@@ -2,7 +2,7 @@ open Base
 
 let read_lines () =
   let stdin    = Stdio.In_channel.stdin      in 
-  let read  () = Stdio.In_channel.input_lines stdin
+  let read  () = Stdio.In_channel.input_lines stdin |> List.map ~f:String.to_array
   and close () = Stdio.In_channel.close stdin in
   Exn.protect ~f:read ~finally:close
 
@@ -20,29 +20,30 @@ let align_with_leader l leader =
     ~after:(neg @@ Align.trailing_whitespace l)
 
 let align lines ~before ~after ~matcher ~offset =
-  let ts = List.map lines ~f:(Align.from_string ~matcher ~offset) in
+  let ts = List.map lines ~f:(Align.from_chars ~matcher ~offset) in
   match find_leader ts with 
   | None      -> lines
   | Some lead ->
     let whites (line, t) = match t with
-      | Some l -> align_with_leader l lead |> Align.pad ~before ~after |> Align.to_string
+      | Some l -> align_with_leader l lead |> Align.pad ~before ~after |> Align.to_chars
       | None   -> line
     in 
       List.map ~f:whites (List.zip_exn lines ts)
 
 let pipeline str chars = 
-  let make_step matcher times before after = 
-   Sequence.to_list @@ Sequence.unfold ~init:times ~f:(function
+  let open Transformation in
+  let make_step {matcher;times;before;after;_} = 
+    let step = function 
       | 0 -> None
-      | n -> let make chars = align ~matcher ~offset:(times - n) ~before ~after chars
-             in  Some (make, n - 1)
-    )
+      | n -> Some (align ~matcher ~offset:(times - n) ~before ~after, n - 1)
+    in
+    Sequence.unfold ~init:times ~f:step |> Sequence.to_list
   in 
-  List.bind (Transformation.parse_list str) 
-    ~f:(fun {matcher; before; after; times; _} -> make_step matcher times before after) 
-  |> List.fold ~init:chars ~f:(fun acc step -> step acc)
+  List.bind (parse_list str) ~f:make_step 
+  |> List.fold ~init:chars ~f:(|>)
 
 let () = pipeline (Sys.get_argv()).(1) (read_lines ()) 
+         |> List.map ~f:(fun x -> String.of_char_list @@ Array.to_list x)
          |> String.concat ~sep:"\n" 
          |> Stdio.print_endline
 

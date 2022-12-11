@@ -30,6 +30,13 @@ let index_of_pattern arr ~offset ~pattern =
     else    loop 0 ofs (idx + 1)
   in loop 0 offset 0
 
+let match_length arrs ~max_len = 
+  let pad arr =
+    let diff = max_len - Array.length arr in
+    Array.append (Array.map ~f:(fun x -> Some x) arr) (Array.init ~f:(Fn.const None) diff)
+  in
+  Array.map ~f:pad arrs
+
 let make_pred syms = 
   fun s -> List.exists ~f:(equal_char s) syms
 

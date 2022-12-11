@@ -10,9 +10,9 @@ val leading_whitespace : t -> int
 (* how many whitespace characters there are in this line after `position` *)
 val trailing_whitespace : t -> int
 
-val from_string : matcher:Match.t -> offset:int -> string -> t option
+val from_chars : matcher:Match.t -> offset:int -> char array -> t option
 
-val to_string  : t -> string
+val to_chars  : t -> char array
 
 (** the main operation of Align
     increases left pad by `before`

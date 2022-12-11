@@ -34,13 +34,12 @@ let trailing_whitespace {matcher; line = str; offset; _} =
   count 0 0
 
 (* because of the use of matchi the rest of functions can use Option.value_exn *)
-let from_string ~matcher ~offset s = 
+let from_chars ~matcher ~offset arr = 
   let open Option             in 
-  let arr = String.to_array s in
   Match.matchi ~str:arr ~offset matcher
   >>| Fn.const { matcher    
                ; offset
-               ; line      = String.to_array s
+               ; line      = arr
                ; left_pad  = 0
                ; right_pad = 0
                }
@@ -57,15 +56,13 @@ let conform_after after difference =
   else 
     Array.sub after ~pos:(neg difference) ~len:(Array.length after + difference)
 
-let to_string {matcher; left_pad; right_pad; line=str; offset} =
+let to_chars {matcher; left_pad; right_pad; line=str; offset} =
   let open Match in
   let {before; after; matched; _} = Match.split_around matcher ~str ~offset |> Option.value_exn in
   let conformed_b = conform_before before  left_pad 
   and conformed_a = conform_after  after   right_pad
   in
-  String.of_char_list 
-  @@ Array.to_list 
-  @@ Array.concat [conformed_b; matched; conformed_a]
+  Array.concat [conformed_b; matched; conformed_a]
   
  
 (* pads are the difference between where a symbol is and where it should go *)
