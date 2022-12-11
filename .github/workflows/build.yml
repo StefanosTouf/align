@@ -27,6 +27,6 @@ jobs:
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
-          name: align.exe
+          name: align
           path: _build/default/bin/main.exe
 
