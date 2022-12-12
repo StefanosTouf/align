@@ -1,4 +1,4 @@
 (executable
  (public_name format)
- (name align)
+ (name main)
  (libraries format base stdio parsexp))
