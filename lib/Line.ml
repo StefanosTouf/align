@@ -28,9 +28,9 @@ let trailing_whitespace after =
   in
   count 0 0
 
-let from_chars ~matcher ~offset arr = 
+let from_chars ~matcher ~offset ~direction arr = 
   let open Option in let open Match in
-    Match.split_around ~str:arr ~offset matcher
+    Match.split_around ~str:arr ~offset ~direction matcher
     >>| fun line -> let {before; after; _} = line in
       { left_pad  = 0
       ; right_pad = 0

@@ -1,7 +1,7 @@
 
 type t 
 
-val from_chars : matcher:Match.t -> offset:int -> char array -> t option
+val from_chars : matcher:Match.t -> offset:int -> direction:Match.direction -> char array -> t option
 
 val to_chars  : t -> char array
 
