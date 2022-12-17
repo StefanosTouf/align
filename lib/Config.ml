@@ -13,42 +13,38 @@ type t = { transformations : (string, transformation list) List.Assoc.t
          ; lines           : char array list
          }
 
-let ( let* ) r f =
-  match r with
-  | Error e -> Error e
-  | Ok x    -> f x
 
-let ( and* ) r r' =
-  match r, r' with
-  | Error e, _        -> Error e
-  | _      , Error e' -> Error e'
-  | Ok x   , Ok x'    -> Result.Ok (x, x')
-
-let transformations_of_string s = Or_error.try_with @@ fun () ->
+let transformations_of_string s =
   List.Assoc.t_of_sexp string_of_sexp (list_of_sexp transformation_of_sexp) @@ Parsexp.Single.parse_string_exn s
 
 let direction_of_string = function
-  | "f" -> Ok Match.Forwards
-  | "b" -> Ok Match.Backwards
-  | d   -> Or_error.error_string (String.concat ["Not a valid direction: "; d])
+  | "f" -> Match.Forwards
+  | "b" -> Match.Backwards
+  | d   -> failwith (String.concat ["Not a valid direction: "; d])
+
+let get_or_else arr ~f ~index ~default = 
+  try  f @@ Array.get arr index 
+  with _ -> default
+
+let multiplier_direction args =
+  let aux i1 i2 = 
+    let direction  = get_or_else args ~f:direction_of_string ~index:i1 ~default:Match.Forwards
+    and multiplier = get_or_else args ~f:Int.of_string       ~index:i2 ~default:1
+    in direction, multiplier
+  in try       aux 3 4
+     with _ -> aux 4 3
 
 let get_config () = 
-  let open Or_error in
   let lines = IO.read_lines `Stdin in
-  let res = 
-    let* args = try_with (fun () -> Array.to_list (Sys.get_argv())) in
-    match args with 
-    | _ :: conf_file :: selector :: n :: d :: _ -> 
-      let* transformations = IO.read_lines (`File conf_file) >>| String.concat >>= transformations_of_string
-      and* direction       = direction_of_string d
-      and* multiplier      = try_with @@ fun () -> Int.of_string n
-      and* lines           = lines >>| List.map ~f:String.to_array
-      in Ok {transformations;direction;selector;multiplier;lines}
-
-    | _ -> error_string "Invalid arguments"
-  in
-  match res with 
+  match Or_error.try_with @@ fun () ->
+    let args = Sys.get_argv() in
+    let direction, multiplier = multiplier_direction args 
+    and transformations       = IO.read_lines (`File (Array.get args 1)) |> String.concat |> transformations_of_string
+    and lines                 = List.map ~f:String.to_array lines
+    and selector              = Array.get args 2
+    in {transformations;direction;selector;multiplier;lines}
+  with 
   | Ok t    -> Either.Second t
-  | Error _ -> Either.First (lines |> Or_error.ok_exn)
+  | Error _ -> Either.First lines
 
 
