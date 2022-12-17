@@ -23,7 +23,7 @@ let pipeline transformations direction =
     in
     Sequence.unfold ~init:times ~f:step |> Sequence.to_list
   in 
-  List.bind ~f:make_step transformations 
+  List.bind transformations ~f:make_step 
 
 let run conf = let open Config in 
   let {transformations;selector;multiplier;direction;lines} = conf in
@@ -31,8 +31,9 @@ let run conf = let open Config in
     let multiply transformation = 
       let {times; _} = transformation in { transformation with times = times * multiplier }
     in
-    let ts = List.Assoc.find ~equal:equal_string transformations selector |> Option.value_exn in
-    List.map ts ~f:multiply
+    List.Assoc.find ~equal:equal_string transformations selector 
+    |> Option.value_exn
+    |> List.map ~f:multiply
   in
     pipeline transformation direction 
     |> begin match direction with 

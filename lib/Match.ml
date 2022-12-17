@@ -80,25 +80,3 @@ let split_around t ~str ~offset ~direction =
 
 let t_of_sexp s = of_array @@ array_of_sexp (fun s -> String.to_array @@ string_of_sexp s) s
 let pp _        = failwith "not used"
-
-
-
-(* let%test_unit "index of word 1" = *)
-(*   [%test_eq: int option] *) 
-(*   (matchi ~offset:0 ([|equal_char 'a';equal_char 'b';equal_char 'c'|]) ~str:[| '3'; 'a'; 'b'; 'c'; '2'; '1' |]) *) 
-(*   (Some 1) *) 
-
-(* let%test_unit "index of word 2" = *)
-(*   [%test_eq: int option] *) 
-(*   (matchi ~offset:1 ([|equal_char 'a';equal_char 'b';equal_char 'c'|]) ~str:[| '3'; 'a'; 'b'; 'c'; '2'; 'a'; 'b'; 'c'; '1' |]) *) 
-(*   (Some 5) *) 
-
-(* let%test_unit "index of word 3" = *)
-(*   [%test_eq: int option] *) 
-(*   (matchi ~offset:0 ([|equal_char 'a';equal_char 'b';equal_char 'c'|]) ~str:[| '3'; 'a'; 'b'; '2'; 'c'; '1'; 'b'; 'c' |]) *) 
-(*   (None) *) 
-
-(* let%test_unit "index of word 4" = *)
-(*   [%test_eq: int option] *) 
-(*   (matchi ~offset:1 ([|equal_char 'a';equal_char 'b';equal_char 'c'|]) ~str:[| '3'; 'a'; 'b'; 'c'; '2'; 'c'; '1'; 'a'; 'b' ; 'c' |]) *) 
-(*   (Some 7) *) 
