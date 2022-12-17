@@ -6,8 +6,7 @@ type transformation = { matcher : Match.t
                       ; times   : int
                       } [@@deriving of_sexp, show] 
 
-type t = { transformations : (string, transformation list) List.Assoc.t
-         ; selector        : string
+type t = { transformations : transformation list
          ; multiplier      : int 
          ; direction       : Match.direction
          ; lines           : char array list
@@ -40,7 +39,9 @@ let get_config () =
     and transformations       = IO.read_lines (`File (Array.get args 1)) |> String.concat |> transformations_of_string
     and lines                 = List.map ~f:String.to_array lines
     and selector              = Array.get args 2
-    in {transformations;direction;selector;multiplier;lines}
+    in  
+    let transformations       = List.Assoc.find ~equal:equal_string transformations selector |> Option.value_exn
+    in {transformations;direction;multiplier;lines}
   with 
   | Ok t    -> Either.Second t
   | Error _ -> Either.First lines

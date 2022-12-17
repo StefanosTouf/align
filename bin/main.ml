@@ -26,16 +26,14 @@ let pipeline transformations direction =
   List.bind transformations ~f:make_step 
 
 let run conf = let open Config in 
-  let {transformations;selector;multiplier;direction;lines} = conf in
-  let transformation = 
+  let {transformations;multiplier;direction;lines} = conf in
+  let transformations = 
     let multiply transformation = 
       let {times; _} = transformation in { transformation with times = times * multiplier }
     in
-    List.Assoc.find ~equal:equal_string transformations selector 
-    |> Option.value_exn
-    |> List.map ~f:multiply
+    List.map ~f:multiply transformations
   in
-    pipeline transformation direction 
+    pipeline transformations direction 
     |> begin match direction with 
        | Match.Forwards  -> Fn.id
        | Match.Backwards -> List.rev

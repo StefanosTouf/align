@@ -7,8 +7,7 @@ type transformation = { matcher : Match.t
                       ; times   : int
                       } [@@deriving of_sexp, show] 
 
-type t = { transformations : (string, transformation list) List.Assoc.t
-         ; selector        : string
+type t = { transformations : transformation list
          ; multiplier      : int 
          ; direction       : Match.direction
          ; lines           : char array list
