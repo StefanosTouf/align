@@ -28,18 +28,16 @@ let pipeline transformations direction =
 let run conf = let open Config in 
   let {transformations;multiplier;direction;lines} = conf in
   let transformations = 
-    let multiply transformation = 
-      let {times; _} = transformation in { transformation with times = times * multiplier }
-    in
+    let multiply transformation = { transformation with times = transformation.times * multiplier } in
     List.map ~f:multiply transformations
   in
-    pipeline transformations direction 
-    |> begin match direction with 
-       | Match.Forwards  -> Fn.id
-       | Match.Backwards -> List.rev
-       end
-    |> List.fold ~init:lines ~f:(|>)
-    |> List.map ~f:(fun x -> String.of_char_list @@ Array.to_list x)
+  pipeline transformations direction 
+  |> begin match direction with 
+     | Match.Forwards  -> Fn.id
+     | Match.Backwards -> List.rev
+     end
+  |> List.fold ~init:lines ~f:(|>)
+  |> List.map ~f:(fun x -> String.of_char_list @@ Array.to_list x)
 
 let () = 
   match Config.get_config () with

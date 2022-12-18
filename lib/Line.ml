@@ -29,15 +29,14 @@ let trailing_whitespace after =
   count 0 0
 
 let from_chars ~matcher ~offset ~direction arr = 
-  let open Option in let open Match in
-    Match.split_around ~str:arr ~offset ~direction matcher
-    >>| fun line -> let {before; after; _} = line in
-      { left_pad  = 0
-      ; right_pad = 0
-      ; leading   = leading_whitespace before
-      ; trailing  = trailing_whitespace after
-      ; line
-      }
+  let open Option in
+  Match.split_around ~str:arr ~offset ~direction matcher
+  >>| fun line -> { left_pad  = 0
+                  ; right_pad = 0
+                  ; leading   = leading_whitespace line.before
+                  ; trailing  = trailing_whitespace line.after
+                  ; line
+                  }
 
 let conform_before before difference =
   if (difference > 0) then
@@ -65,11 +64,8 @@ let pad t ~before ~after =
   }
 
 let compare t t' = 
-  let {line={idx=pos ;_}; leading=l ; left_pad=pad ; _} = t 
-  and {line={idx=pos';_}; leading=l'; left_pad=pad'; _} = t' 
-  in  compare_int (pos - l - pad) (pos' - l' - pad')
+  compare_int (t.line.idx  - t.leading  - t.left_pad ) 
+              (t'.line.idx - t'.leading - t'.left_pad)
 
 let align_with l ~leader =
-  let {line={idx=pos ;_}; trailing; _} = l 
-  and {line={idx=pos';_}; leading ; _} = leader 
-  in pad l ~before:(pos' - pos - leading) ~after:(neg trailing)
+  pad l ~before:(leader.line.idx - l.line.idx - leader.leading) ~after:(neg l.trailing)
