@@ -25,11 +25,9 @@ let get_or_else arr ~f ~index ~default =
   with _ -> default
 
 let multiplier_direction args =
-  let aux i1 i2 = 
-    let direction  = get_or_else args ~f:direction_of_string ~index:i1 ~default:Match.Forwards
-    and multiplier = get_or_else args ~f:Int.of_string       ~index:i2 ~default:1
-    in direction, multiplier
-  in try aux 3 4 with _ -> aux 4 3
+  let multiplier = get_or_else args ~f:Int.of_string       ~index:3 ~default:1
+  and direction  = get_or_else args ~f:direction_of_string ~index:4 ~default:Match.Forwards
+  in direction, multiplier
 
 let get_config () = 
   let lines = IO.read_lines `Stdin in
