@@ -7,6 +7,7 @@ type direction = Forwards | Backwards
 type deconstructed = { before  : char array
                      ; matched : char array
                      ; after   : char array
+                     ; length  : int
                      ; idx     : int
                      }
 

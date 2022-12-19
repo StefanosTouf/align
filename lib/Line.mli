@@ -13,3 +13,5 @@ val compare : t -> t -> int
 
 (** pads t to align it with leader *)
 val align_with : t -> leader:t -> t
+
+val symbol_length : t -> int

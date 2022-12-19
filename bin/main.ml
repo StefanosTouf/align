@@ -1,18 +1,19 @@
 open Base
 
-let find_leader ts =
-  List.filter_opt ts |> List.max_elt ~compare:Line.compare
 
 let align lines ~before ~after ~matcher ~offset ~direction =
-  let ts = List.map lines ~f:(Line.from_chars ~matcher ~offset ~direction) in
-  match find_leader ts with 
-  | None        -> lines
-  | Some leader ->
+  let ts         = List.map lines ~f:(Line.from_chars ~matcher ~offset ~direction) in
+  let leader     = List.filter_opt ts |> List.max_elt ~compare:Line.compare in
+  let max_length = List.filter_opt ts |> List.map ~f:Line.symbol_length |> List.max_elt ~compare:compare in
+  match leader, max_length with 
+  | Some leader, Some max_length ->
     let whites (line, t) = match t with
-      | Some l -> Line.align_with l ~leader |> Line.pad ~before ~after |> Line.to_chars
+      | Some l -> Line.align_with l ~leader |> Line.pad ~before ~after:(max_length - (Line.symbol_length l) + after) |> Line.to_chars
       | None   -> line
     in 
       List.map ~f:whites (List.zip_exn lines ts)
+
+  | _ -> lines
 
 let pipeline transformations direction = 
   let open Config in

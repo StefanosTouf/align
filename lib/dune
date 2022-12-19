@@ -4,4 +4,4 @@
  (name format)
  (libraries base core)
  (preprocess
-  (pps ppx_inline_test ppx_jane ppx_deriving.show)))
+  (pps ppx_inline_test ppx_jane ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))

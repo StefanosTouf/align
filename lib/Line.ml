@@ -1,11 +1,13 @@
 open Base
 
-type t = { line      : Match.deconstructed
-         ; leading   : int
-         ; trailing  : int
-         ; left_pad  : int
-         ; right_pad : int
+type t = { line       : Match.deconstructed
+         ; leading    : int
+         ; trailing   : int
+         ; left_pad   : int
+         ; right_pad  : int
          }
+
+let symbol_length t = t.line.length  
 
 let array_of_whites length =
   Array.init ~f:(Fn.const ' ') length
@@ -66,6 +68,11 @@ let pad t ~before ~after =
 let compare t t' = 
   compare_int (t.line.idx  - t.leading  - t.left_pad ) 
               (t'.line.idx - t'.leading - t'.left_pad)
+            
+(* let elect ls = *) 
+(*   let max_length = (List.max_elt ls ~compare:(fun l l' -> Int.compare l.line.length l'.line.length) |> Option.value_exn).line.length *)
+(*   and leader     = List.max_elt ls ~compare |> Option.value_exn *)
+(*   in { leader with line = { leader.line with length = max_length } } *)
 
 let align_with l ~leader =
   pad l ~before:(leader.line.idx - l.line.idx - leader.leading) ~after:(neg l.trailing)
