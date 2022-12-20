@@ -9,9 +9,6 @@ type t = { line       : Match.deconstructed
 
 let symbol_length t = t.line.length  
 
-let array_of_whites length =
-  Array.init ~f:(Fn.const ' ') length
-
 let is_not_white = Fn.compose not (equal_char ' ') 
 
 let leading_whitespace before =
@@ -42,13 +39,13 @@ let from_chars ~matcher ~offset ~direction arr =
 
 let conform_before before difference =
   if (difference > 0) then
-    Array.concat [before; array_of_whites difference]
+    Array.concat [before; Common.array_of ' ' difference]
   else 
     Array.sub before ~pos:0 ~len:(Array.length before + difference)
 
 let conform_after after difference =
   if (difference > 0) then
-    Array.concat [array_of_whites difference; after]
+    Array.concat [Common.array_of ' ' difference; after]
   else 
     Array.sub after ~pos:(neg difference) ~len:(Array.length after + difference)
 
@@ -60,19 +57,13 @@ let to_chars {left_pad; right_pad; line={before; after; matched ;_}; _} =
  
 (* pads are the difference between where a symbol is and where it should go *)
 let pad t ~before ~after = 
-  let {left_pad; right_pad; _} = t in
-  { t with left_pad  = left_pad  + before
-  ;        right_pad = right_pad + after
+  { t with left_pad  = t.left_pad  + before
+  ;        right_pad = t.right_pad + after
   }
 
 let compare t t' = 
   compare_int (t.line.idx  - t.leading  - t.left_pad ) 
               (t'.line.idx - t'.leading - t'.left_pad)
             
-(* let elect ls = *) 
-(*   let max_length = (List.max_elt ls ~compare:(fun l l' -> Int.compare l.line.length l'.line.length) |> Option.value_exn).line.length *)
-(*   and leader     = List.max_elt ls ~compare |> Option.value_exn *)
-(*   in { leader with line = { leader.line with length = max_length } } *)
-
 let align_with l ~leader =
   pad l ~before:(leader.line.idx - l.line.idx - leader.leading) ~after:(neg l.trailing)

@@ -2,21 +2,24 @@ open Base
 
 
 let align lines ~before ~after ~matcher ~offset ~direction =
-  let ts         = List.map lines ~f:(Line.from_chars ~matcher ~offset ~direction) in
-  let leader     = List.filter_opt ts |> List.max_elt ~compare:Line.compare in
-  let max_length = List.filter_opt ts |> List.map ~f:Line.symbol_length |> List.max_elt ~compare:compare in
+  let ts_opt     = List.map lines ~f:(Line.from_chars ~matcher ~offset ~direction) in
+  let ts         = List.filter_opt ts_opt in
+  let leader     = List.max_elt ~compare:Line.compare ts in
+  let max_length = List.map ~f:Line.symbol_length ts |> List.max_elt ~compare:compare in
   match leader, max_length with 
   | Some leader, Some max_length ->
     let whites (line, t) = match t with
-      | Some l -> Line.align_with l ~leader |> Line.pad ~before ~after:(max_length - (Line.symbol_length l) + after) |> Line.to_chars
+      | Some l -> Line.align_with l ~leader 
+                  |> Line.pad ~before ~after:(max_length - Line.symbol_length l + after) 
+                  |> Line.to_chars
       | None   -> line
     in 
-      List.map ~f:whites (List.zip_exn lines ts)
+      List.map ~f:whites @@ List.zip_exn lines ts_opt
 
   | _ -> lines
 
 let pipeline transformations direction = 
-  let open Config in
+  let open Config in let open List in
   let make_step {matcher;times;before;after;_} = 
     let step = function 
       | 0 -> None
@@ -24,12 +27,11 @@ let pipeline transformations direction =
     in
     Sequence.unfold ~init:times ~f:step |> Sequence.to_list
   in 
-  List.bind transformations ~f:make_step 
+  transformations >>= make_step 
 
-let run conf = let open Config in 
-  let {transformations;multiplier;direction;lines} = conf in
+let run Config.({transformations;multiplier;direction;lines}) =
   let transformations = 
-    let multiply transformation = { transformation with times = transformation.times * multiplier } in
+    let multiply t = Config.({ t with times = t.times * multiplier }) in
     List.map ~f:multiply transformations
   in
   pipeline transformations direction 
@@ -38,7 +40,7 @@ let run conf = let open Config in
      | Match.Backwards -> List.rev
      end
   |> List.fold ~init:lines ~f:(|>)
-  |> List.map ~f:(fun x -> String.of_char_list @@ Array.to_list x)
+  |> List.map ~f:(Fn.compose String.of_char_list Array.to_list)
 
 let () = 
   match Config.get_config () with
